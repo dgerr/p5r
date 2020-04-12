@@ -155,14 +155,31 @@ body {
 
 .slider-option {
 	position: relative;
+	margin-bottom: -75px;
 }
+
 
 .slider-option-text {
 	position: absolute;
 	top: 50px; left: 30px;
 	font-size: 1.1em;
 	transform: rotate(10deg);
-	width: 250px; text-align: center;
+	width: 250px; 
+	text-align: center;
+}
+
+.slider-option-2 {
+	margin-left: -100px;
+	transform: rotate(-10deg);
+}
+
+.slider-option-2 .slider-option-text {
+	top: 65px; left: 40px;
+	width: 300px;
+}
+
+.slider-option-3 {
+	transform: rotate(-18deg);
 }
 
 
@@ -344,6 +361,13 @@ TODO: probably remove*/
        }
 }
 
+.selected .slider-option-text {
+	color: #000 !important;
+}
+.selected path {
+	fill: #fff !important;
+	stroke: #000 !important;
+}
 
 svg.header-shape-svg path {
 	animation: headerhover 1.5s 0s ease infinite;
@@ -357,9 +381,6 @@ svg.pointer-shape-svg path {
 	animation: pointerhover 0.75s 0s ease infinite;
 }
 
-svg.slider-option-svg path {
-	animation: slideroptionhover 1s 0s ease infinite;
-}
 
 .background {
 	animation: bghover 4s 0s ease infinite;
@@ -377,6 +398,18 @@ svg.slider-option-svg path {
 	animation: sliderbottomhover 1s 0s ease infinite;
  }
 
+
+.slider-option-1 svg.slider-option-svg path {
+	animation: slideroptionhover 1s 0s ease infinite;
+}
+
+.slider-option-2 svg.slider-option-svg path {
+	animation: slideroptionhover 0.75s 0s ease infinite;
+}
+
+.slider-option-3 svg.slider-option-svg path {
+	animation: slideroptionhover 1.25s 0s ease infinite;
+}
 
 </style>
 
@@ -399,12 +432,28 @@ svg.slider-option-svg path {
 	<div class="slider-portrait-container">
 
 		<div class="slider-option-container">
-				<div class="slider-option slider-option-1">
+				<div class="slider-option slider-option-1 selected">
 					<div class="slider-option-text"> Option 1! </div>
 					<svg class="slider-option-svg" viewBox="0 0 230 80">
 						<path d="M23.4609375 0 179.085938 37.1484375 166.861328 57.5390625 220.410156 79.84375 138.023438 75.1445313 142.5625 61.6699219 0.18359375 40z" fill="#000" stroke="#fff" stroke-width="3"></path>
 					</svg>
 				</div>
+
+				<div class="slider-option slider-option-2">
+					<div class="slider-option-text"> Then maybe Option 2...? </div>
+					<svg class="slider-option-svg" viewBox="0 0 230 80">
+						<path d="M23.4609375 0 179.085938 37.1484375 166.861328 57.5390625 220.410156 79.84375 138.023438 75.1445313 142.5625 61.6699219 0.18359375 40z" fill="#000" stroke="#fff" stroke-width="3"></path>
+					</svg>
+				</div>
+
+				<div class="slider-option slider-option-3">
+					<div class="slider-option-text"> Option 3. </div>
+					<svg class="slider-option-svg" viewBox="0 0 230 80">
+						<path d="M23.4609375 0 179.085938 37.1484375 166.861328 57.5390625 220.410156 79.84375 138.023438 75.1445313 142.5625 61.6699219 0.18359375 40z" fill="#000" stroke="#fff" stroke-width="3"></path>
+					</svg>
+				</div>
+
+
 		</div>
 
 		 <svg class="slider-left-bar-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 720" preserveAspectRatio="none">
