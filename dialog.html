@@ -4,12 +4,20 @@
 
 <script>
 
+var CURRENT_PAGE = 0;
+var SPEAKER_NAME = "Akechi";
+var DIALOG = [
+	"This sentence has one line.",
+	"This has two lines. The second line is much longer than the first line. ",
+	"This has three lines. Three lines is too long, but it can probably barely fit. Can I stop typing yet? Apparently not. Okay, here's one more line!"
+]
+
 /*Takes a string and returns raw html with some random "ransom note" letters, Persona style.
 
 ~0.2 chance to be ransom letter.
 Consecutive letters will never be ransom.
-*/
 e.g. "asdf" ==> "as<span class='ransom'>d</span>f"
+*/
 function ransomify(input) {
 	var result = document.createElement('span');
 	var isRansom = new Array(input.length);
@@ -32,6 +40,52 @@ function ransomify(input) {
 
 }
 
+/* precondition: CURRENT_PAGE <= DIALOG.length*/
+function renderScene() {
+	document.getElementById('header-shape-text').textContent = SPEAKER_NAME;
+
+	var pointer = document.getElementById('pointer');
+	if (CURRENT_PAGE == DIALOG.length - 1) {
+		pointer.classList.add('hidden');
+	}
+
+	var bodyText = document.getElementById('body-shape-text');
+	bodyText.textContent = DIALOG[CURRENT_PAGE];
+	document.getElementById('header-shape-text').textContent = SPEAKER_NAME;
+
+	if (CURRENT_PAGE > 0 && CURRENT_PAGE < DIALOG.length) {
+		bodyText.classList.remove('fadeIn');
+		bodyText.classList.add('hide');
+		setTimeout(function() {
+			bodyText.classList.remove('hide');
+			bodyText.classList.add('fadeIn');
+		}, 100);
+	}
+}
+
+function main() {
+
+	renderScene();
+
+	// re-render on listen
+	window.addEventListener('keypress', function(e) {
+
+		if (e.keyCode == 13 || e.keyCode == 32) {  // 13 = enter, 32 = space 
+			CURRENT_PAGE++;
+			if (CURRENT_PAGE >= DIALOG.length) {
+				// console.log('Out of stuff');
+				return;
+			} else {
+				renderScene();
+			}
+		}
+	});
+
+}
+
+// I still don't know why this is necessary
+setTimeout(function() { main() }, 0);
+
 </script>
 
 <style>
@@ -43,55 +97,202 @@ function ransomify(input) {
 * {
   margin: 0; padding: 0;
   color: #eee;
-  font: 25px 'p5hatty', system-ui;
+  font: 28px 'p5hatty', system-ui;
   letter-spacing: 0.25px;
   line-height: 0.9em;
   background: transparent;
 }
 
 body {
-	background: #812812;
+	overflow: hidden;
+}
+
+.overlay, .background {
+	position: absolute;
+	top: -5px; left: -5px;
+	height: 102%; width: 102%;
+}
+
+.overlay {
+	background-color: rgba(0,0,0,0.7);
+	z-index: 10;
+}
+
+.background {
+	z-index: -1;
+	background-image: url('shibuya.jpg');
+	background-size: cover;
 }
 
 /* Container to position elements */
 .container {
 	position: absolute;
-	bottom: 0;
-	left: 25%;  /*todo: fix?*/
+	bottom: -100px;
+	left: 400px;  /*todo: fix?*/
 }
 
+.portrait {
+	position: absolute;
+	bottom: 0px;
+	left: 100px;
+	height: 400px; width: 400px;
+	background-image: url('akechi.png');
+	background-size: cover;
+}
+
+
+.slider-portrait-container {
+	height: 100%; width: 100%;
+	position: relative;
+}
+
+.slider-portrait {
+	height: 100%; 
+	width: 400px;
+	background-size: cover;
+	background-image: url('joker.png');
+	position: absolute;
+	right: 0;
+
+	clip-path: url(#slider-clip);
+
+}
+
+.slider-left-bar-svg {
+	position: absolute;
+	right: 140px;
+	height: 100%;
+	z-index: 20;
+}
+
+.slider-right-bar-svg {
+	position: absolute;
+	height: 150px; width: 150px;
+	bottom: -30px;
+	right: -30px;
+	z-index: 20;
+}
+
+.slider-top-cover-svg {
+	position: absolute;
+	top: -150px; right: -150px;
+	z-index: 15;
+	width: 350px;
+
+}
+
+.slider-bottom-cover-svg {
+	position: absolute;
+	bottom: -100px; right: 100px;
+	z-index: 15;
+	width: 300px;
+}
+
+.hide {
+	opacity: 0;
+}
+
+.fadeIn {
+	opacity: 1;
+	transition: 0.25s all;
+}
+
+.slider {
+	position: absolute;
+	right: 0;
+	height: 100%;
+	width: 400px;
+	z-index: 100;
+}
+
+/* Music note
+TODO: probably remove*/
+.musicnote {
+	display: none;
+	position: relative;
+	height: 100px; width: 75px;
+}
 
 /* Header text */
-.header-shape {
+#header-shape {
 	position: relative;
-	width: 240px;
+	width: 300px;
 	height: 100px;
-	color: black;
+	top: 70px; left: -50px;
+	z-index: 1;
 }
 
-.header-shape .ransom {
+#header-shape .ransom {
 	background-color: black;
 	color: white; 
 }
 
+#header-shape-text {
+	position: absolute;
+	top: 28px; left: 95px;
+	transform: rotate(-13deg);
+	color: black;
+}
+
 /* Body text */
 
-.body-shape { 
+#body-shape { 
 	position: relative;
   width: 600px;
   height: 250px;
 }
 
-.body-shape-text {
+#body-shape-text {
 	position: absolute;
-	top: 80px; left: 30px;
-	z-index: 1;
+	top: 55px; left: 35px;
+	height: 70px; width: 500px;
+	display: flex;
+    align-items: center;
 }
+
+/* Pointer */
+
+#pointer {
+	position: absolute;
+	width: 150px;
+	height: 75px;
+	bottom: 150px;
+	right: -50px;
+}
+
+.hidden {
+	display: none !important;
+}
+
+/* Animations */
+
+@keyframes bghover {
+  33% {
+  	transform: translate(3px, 0px);
+  }
+
+  66% {
+  	transform: translate(0px, 3px);
+
+  }
+}
+
+@keyframes slidertophover {
+  50% {
+  	transform: translate(-5px, 3px);
+  }
+}
+
+@keyframes sliderbottomhover {
+  50% {
+  	transform: translate(7px, 4px);
+  }
+}
+
 
 @keyframes headerhover {
   50% {
-	d: path("M0 29.9257812 371.108956 -0 397 127.332031 0.546875 93.019531z");
-	d: path("M20.9228516,41.859375 L152.069336,0 L174.854492,36.8574219 L56.8457031,59.5527344 L58.1132813,66.3310547 C19.9988735,68.3003501 0.627779762,69.2420819 0,69.15625 L32.7910156,53.6347656 L20.9228516,41.859375 Z");
+	d: path("M24.7910156,28.7259765 L118.792969,0.888671875 L141.762695,24.0966797 L57.9199219,42.5527344 L60.8642578,48.5283203 C21.4132615,53.8309491 1.37387351,56.4393475 0.74609375,56.3535156 L37.9296875,38.0146484 L24.7910156,28.7259765 Z");
   }
 }
 
@@ -101,42 +302,129 @@ body {
   }
 }
 
+
+@keyframes pointerhover {
+	25% {
+	transform: translate(-8px, 12px) rotate(-4deg);		
+	}
+
+  50% {
+	d: path("M76 -0.0546875 107.810547 42.4550781 -0.013671875 69.7441406z");
+	transform: translate(0);
+  }
+
+  75% {
+	transform: translate(-10px, 10px);
+  }
+}
+
+
 svg.header-shape-svg path {
 	animation: headerhover 1.5s 0s ease infinite;
 }
 
 svg.body-shape-svg path {
-	animation: bodyhover 1.5s 0s ease infinite;
+	animation: bodyhover 0.5s 0s ease infinite;
 }
 
+svg.pointer-shape-svg path {
+	animation: pointerhover 0.75s 0s ease infinite;
+}
 
+.background {
+	animation: bghover 4s 0s ease infinite;
+}
+
+.slider-portrait {
+	animation: bghover 2s 0s ease infinite;
+}
+
+ .slider-top-cover-svg {
+	animation: slidertophover 1s 0s ease infinite;
+ }
+
+ .slider-bottom-cover-svg {
+	animation: sliderbottomhover 1s 0s ease infinite;
+ }
 
 </style>
 
 <body>
 
-<div class="container">
+<div class="overlay"></div>
+<div class="background"></div>
+<div class="portrait"></div>
 
-	<div class="header-shape">
-		<div class="header-shape-text">
-			Akechi
+<!-- <div class="musicnote">
+	<svg class="musicnote-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 95" preserveAspectRatio="none">
+			<path fill="#000" d="M6.57885742,56.0972333 C10.0181478,53.7526081 13.4335938,52.5802955 16.8251953,52.5802955 C20.2167969,52.5802955 23.097168,53.2646874 25.4663086,54.6334712 L18.1035156,0.11328125 L41.3935547,23.7958984 L41.3935547,35.7607422 C41.0608749,36.4734027 44.2405624,40.8601215 50.9326172,48.9208984 L44.3886719,59.1913979 L46.9423828,63.8662109 L41.3935547,59.1913979 L42.7646484,54.6334712 L26.8435059,29.5400391 C28.0016434,48.0494672 28.5863602,37.3108374 30.5976563,57.3241498 C31.9880711,61.3197273 33.2529297,65.7453352 33.2529297,69.6311176 C33.2529297,74.0707501 31.1164551,78.3564287 26.8435059,82.4881534 C23.2901204,84.8300355 19.8844401,86.0009766 16.6264648,86.0009766 C13.3684896,86.0009766 9.87158203,84.8300355 6.13574219,82.4881534 C2.0452474,78.750514 0,74.4648354 0,69.6311176 C0,64.7973997 2.19295247,60.2861049 6.57885742,56.0972333 Z" stroke="#33d9e1" stroke-width="2.5"></path>
+		</svg>
+</div> -->
+
+<div class="slider">
+	<div class="slider-portrait-container">
+		 <svg class="slider-left-bar-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 720" preserveAspectRatio="none">
+			<path fill="#fff" d="M215.887956,9.7073811e-15 L316,0 L186.76648,354.276273 L192.531511,365.230732 L48.2971738,713 L0,713 L74.4935938,579.643787 L172.657556,335.678758 L222.779589,108.09338 C223.348284,106.441541 218.847745,104.778265 209.277974,103.103553 L215.887956,42.346102 L215.887956,9.7073811e-15 Z" stroke="#000" stroke-width="8"></path>
+		</svg>
+		 <svg class="slider-right-bar-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" preserveAspectRatio="none">
+			<path fill="#fff" d="M0 194 185 0 185 75.5560453 51.3955454 173.671728 41.7751362 194z" stroke="#000" stroke-width="8"></path>
+		</svg>
+
+		 <svg class="slider-top-cover-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 160" preserveAspectRatio="none">
+			<path fill="#000" d="M0 95.171875 43.046875 0 180.400391 80.6582031 134.21875 161.316406
+z"></path>
+		</svg>
+		 <svg class="slider-bottom-cover-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 160" preserveAspectRatio="none">
+			<path fill="#000" d="M0 95.171875 43.046875 0 180.400391 80.6582031 134.21875 161.316406
+z"></path>
+		</svg>
+
+
+		<div class="slider-dialog-options">
+			<div class="slider-option-1">
+				Text 1
+				
+			</div>
+
 		</div>
 
-		 <svg class="header-shape-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 150" preserveAspectRatio="none">
-			<path fill="#fff" d="M50.565918 20.1196289 441.947266 0.45703125 463.888672 130.251953 72.9472656 82.0517578 61.8144531 92.4492187 33.6181641 57.6201172 25.2822266 67.6904297 0.474609375 50.1806641 19.7011719 52.6289062 22.8417969 34.8720703 47.3154297 50.1806641z" stroke="#000" stroke-width="3"></path>
+		<div class="slider-portrait"></div>
+		<svg width="0" height="0">
+		<clipPath id="slider-clip">
+		<path d="M252.227334 0 450.285 0 450.285 496.948844 293.108002 675.793709 0 675.793709z"></path>
+		</clipPath>
 		</svg>
 
 	</div>
 
-	<div class="body-shape">
-		<div class="body-shape-text">
-			Here's an option that you can hover over.
+</div>
+
+<div class="container">
+
+	<div id="header-shape">
+		<div id="header-shape-text"></div>
+
+		 <svg class="header-shape-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 70" preserveAspectRatio="none">
+			<path fill="#fff" d="M26.2246094,27.5214844 L117.930664,0.734375 L137.818359,25.7333984 L57.9199219,42.5527344 L59.8798828,50.9101562 C21.030449,54.8657798 1.29184226,56.8006756 0.6640625,56.7148438 L37.9296875,38.0146484 L26.2246094,27.5214844 Z" stroke="#000" stroke-width="3"></path>
+		</svg>
+
+	</div>
+
+	<div id="body-shape">
+		<div id="body-shape-text">
 		</div>
 
 		 <svg class="body-shape-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 150" preserveAspectRatio="none">
 			<path fill="#000" d="M0 31.28125 371.046875 0.76171875 390.566406 130.332031 0 88.6796875z" stroke="#fff" stroke-width="5"></path>
-
 		</svg>
+	</div>
+
+
+	<div id="pointer">
+		 <svg class="pointer-shape-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 75" preserveAspectRatio="none">
+			<path fill="#fff" d="M74.3613281 0.40234375 108.277344 43.6289063 0.21875 68.9921875z" stroke="#000" stroke-width="5"></path>
+		</svg>
+
 	</div>
 
 </div>
