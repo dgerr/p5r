@@ -146,6 +146,26 @@ body {
 	position: relative;
 }
 
+.slider-option-container {
+	position: absolute;
+	bottom: 200px; right: 250px;
+	width: 400px;
+	z-index: 21;
+}
+
+.slider-option {
+	position: relative;
+}
+
+.slider-option-text {
+	position: absolute;
+	top: 50px; left: 30px;
+	font-size: 1.1em;
+	transform: rotate(10deg);
+	width: 250px; text-align: center;
+}
+
+
 .slider-portrait {
 	height: 100%; 
 	width: 400px;
@@ -318,6 +338,12 @@ TODO: probably remove*/
   }
 }
 
+@keyframes slideroptionhover {
+       50% {
+               d: path("M27.4609375 0 182.719727 38.6123047 170.861328 57.5390625 223.070312 78.2724609 137.163086 74.8808594 141.5625 61.6699219 0.719726562 39.921875z");
+       }
+}
+
 
 svg.header-shape-svg path {
 	animation: headerhover 1.5s 0s ease infinite;
@@ -329,6 +355,10 @@ svg.body-shape-svg path {
 
 svg.pointer-shape-svg path {
 	animation: pointerhover 0.75s 0s ease infinite;
+}
+
+svg.slider-option-svg path {
+	animation: slideroptionhover 1s 0s ease infinite;
 }
 
 .background {
@@ -347,6 +377,7 @@ svg.pointer-shape-svg path {
 	animation: sliderbottomhover 1s 0s ease infinite;
  }
 
+
 </style>
 
 <body>
@@ -362,7 +393,20 @@ svg.pointer-shape-svg path {
 </div> -->
 
 <div class="slider">
+
+
+
 	<div class="slider-portrait-container">
+
+		<div class="slider-option-container">
+				<div class="slider-option slider-option-1">
+					<div class="slider-option-text"> Option 1! </div>
+					<svg class="slider-option-svg" viewBox="0 0 230 80">
+						<path d="M23.4609375 0 179.085938 37.1484375 166.861328 57.5390625 220.410156 79.84375 138.023438 75.1445313 142.5625 61.6699219 0.18359375 40z" fill="#000" stroke="#fff" stroke-width="3"></path>
+					</svg>
+				</div>
+		</div>
+
 		 <svg class="slider-left-bar-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 720" preserveAspectRatio="none">
 			<path fill="#fff" d="M215.887956,9.7073811e-15 L316,0 L186.76648,354.276273 L192.531511,365.230732 L48.2971738,713 L0,713 L74.4935938,579.643787 L172.657556,335.678758 L222.779589,108.09338 C223.348284,106.441541 218.847745,104.778265 209.277974,103.103553 L215.887956,42.346102 L215.887956,9.7073811e-15 Z" stroke="#000" stroke-width="8"></path>
 		</svg>
@@ -379,14 +423,6 @@ z"></path>
 z"></path>
 		</svg>
 
-
-		<div class="slider-dialog-options">
-			<div class="slider-option-1">
-				Text 1
-				
-			</div>
-
-		</div>
 
 		<div class="slider-portrait"></div>
 		<svg width="0" height="0">
