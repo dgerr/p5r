@@ -5,6 +5,7 @@
 <script>
 
 var CURRENT_PAGE = 0;
+var CURRENT_SELECTION = 1;  // NOT zero-indexed
 var SPEAKER_NAME = "Akechi";
 var DIALOG = [
 	"This sentence has one line.",
@@ -52,6 +53,7 @@ function renderScene() {
 	var bodyText = document.getElementById('body-shape-text');
 	bodyText.textContent = DIALOG[CURRENT_PAGE];
 	document.getElementById('header-shape-text').textContent = SPEAKER_NAME;
+	document.getElementById('audio-advance').play();
 
 	if (CURRENT_PAGE > 0 && CURRENT_PAGE < DIALOG.length) {
 		bodyText.classList.remove('fadeIn');
@@ -63,20 +65,59 @@ function renderScene() {
 	}
 }
 
+function isDialogPage() {
+	// temp
+	return false;
+}
+
+function evaluateDialog() {
+	// test
+}
+
 function main() {
 
 	renderScene();
 
-	// re-render on listen
-	window.addEventListener('keypress', function(e) {
+	window.addEventListener('keydown', function(e) {
 
-		if (e.keyCode == 13 || e.keyCode == 32) {  // 13 = enter, 32 = space 
-			CURRENT_PAGE++;
-			if (CURRENT_PAGE >= DIALOG.length) {
-				// console.log('Out of stuff');
-				return;
-			} else {
-				renderScene();
+		if (e.keyCode == 38 && isDialogPage()) { // up
+			if (CURRENT_SELECTION > 1) {
+				document.getElementById('slider-option-'+CURRENT_SELECTION).classList.remove('selected');
+				CURRENT_SELECTION--;
+				document.getElementById('slider-option-'+CURRENT_SELECTION).classList.add('selected');
+				document.getElementById('audio-switch').play();
+			}
+		}
+		else if (e.keyCode == 40 && isDialogPage()) { // down
+			if (CURRENT_SELECTION < 3) {
+				document.getElementById('slider-option-'+CURRENT_SELECTION).classList.remove('selected');
+				CURRENT_SELECTION++;
+				document.getElementById('slider-option-'+CURRENT_SELECTION).classList.add('selected');
+				document.getElementById('audio-switch').play();
+			}
+		}
+		else if (e.keyCode == 13 || e.keyCode == 32) {  // 13 = enter, 32 = space 
+
+			if (isDialogPage()) {
+				evaluateDialog();
+			}
+			else {
+				CURRENT_PAGE++;
+
+				if (CURRENT_PAGE == 1) {
+					var audio = document.getElementById('audio-sweet');
+					audio.volume = 0.66;
+					audio.play();
+				}
+
+				if (CURRENT_PAGE >= DIALOG.length) {
+					// console.log('Out of stuff');
+					return;
+
+				} else {
+					renderScene();
+				}				
+
 			}
 		}
 	});
@@ -124,6 +165,23 @@ body {
 	background-size: cover;
 }
 
+.thoughtbubble {
+	display: none;
+
+	z-index: 20;
+	position: absolute;
+	bottom: 100px;
+	left: 400px;  /* todo: fix?*/
+	width: 400px;
+}
+
+.thoughtbubble-text {
+	position: relative;
+	width: 250px; 
+	top: 100px; left: 50px;
+	text-align: center;
+}
+
 /* Container to position elements */
 .container {
 	position: absolute;
@@ -168,17 +226,17 @@ body {
 	text-align: center;
 }
 
-.slider-option-2 {
+#slider-option-2 {
 	margin-left: -100px;
 	transform: rotate(-10deg);
 }
 
-.slider-option-2 .slider-option-text {
+#slider-option-2 .slider-option-text {
 	top: 65px; left: 40px;
 	width: 300px;
 }
 
-.slider-option-3 {
+#slider-option-3 {
 	transform: rotate(-18deg);
 }
 
@@ -361,6 +419,12 @@ TODO: probably remove*/
        }
 }
 
+@keyframes thoughtbubblehover {
+	50% {
+		d: path("M77.0202753,9.07287533 C77.7164842,8.99310441 78.4140331,8.91574564 79.1127651,8.84081126 C102.062124,-3.5818336 143.883782,-3.21654803 156.986359,11.8687074 C173.340094,15.8037852 185.363202,22.283676 188.981236,31.6261092 C191.97829,39.3650567 187.560653,45.7684016 178.339804,50.8802385 C174.095962,64.79676 144.247528,68.1240053 122.859894,64.459617 C113.05621,65.4688794 102.817079,66.0840565 92.6141366,66.3131118 C73.808004,74.755291 36.7003296,71.5807709 27.6539408,61.6859255 C11.2934733,58.3200376 0.421427278,53.1836987 0.0249430368,46.3611161 C-0.358055658,39.7705888 3.6888483,33.8789199 10.8395559,28.7895199 C15.3081256,10.5311759 52.2035721,3.62213109 77.0202684,9.07287382 Z");
+	}
+}
+
 .selected .slider-option-text {
 	color: #000 !important;
 }
@@ -399,25 +463,40 @@ svg.pointer-shape-svg path {
  }
 
 
-.slider-option-1 svg.slider-option-svg path {
+#slider-option-1 svg.slider-option-svg path {
 	animation: slideroptionhover 1s 0s ease infinite;
 }
 
-.slider-option-2 svg.slider-option-svg path {
+#slider-option-2 svg.slider-option-svg path {
 	animation: slideroptionhover 0.75s 0s ease infinite;
 }
 
-.slider-option-3 svg.slider-option-svg path {
+#slider-option-3 svg.slider-option-svg path {
 	animation: slideroptionhover 1.25s 0s ease infinite;
+}
+
+.thoughtbubble svg.thoughtbubble-svg path {
+	animation: thoughtbubblehover 3s 0s ease infinite;
 }
 
 </style>
 
 <body>
+<audio id="audio-sweet" src="sweet.mp3"></audio>
+<audio id="audio-switch" src="00042.wav"></audio>
+<audio id="audio-select" src="00104.wav"></audio>
+<audio id="audio-advance" src="00086.wav"></audio>
 
 <div class="overlay"></div>
 <div class="background"></div>
 <div class="portrait"></div>
+
+<div class="thoughtbubble">
+	<div class="thoughtbubble-text">I spent some time alone with Akechi...</div>
+	<svg class="thoughtbubble-svg" viewBox="0 0 200 120">
+		<path fill="#000" d="M78.3323052,6.92557302 C80.3584535,6.7027606 82.3950685,6.50034812 84.4383102,6.31863505 C106.459011,-2.79814534 139.993058,-2.24104473 154.239614,9.24034033 C171.987304,13.0972141 185.163512,19.7680376 188.981236,29.6261092 C192.308216,38.2169879 186.498181,45.1620228 175.123474,50.5215325 C169.96779,64.444796 138.485124,67.3088139 117.323584,62.9839897 C109.920522,63.6255807 102.325173,64.0498353 94.7317968,64.2600334 C76.2744661,72.6274293 39.9494208,69.70328 30.1279779,60.1736361 C12.3976173,56.8253544 0.441090556,51.5220585 0.0249430368,44.3611161 C-0.400855261,37.034106 4.64864033,30.5708745 13.3512307,25.1135185 C19.5395844,8.27348398 54.3086403,1.91320601 78.3323052,6.92557302 Z" stroke="#fff" stroke-width="3"></path>
+	</svg>
+</div>
 
 <!-- <div class="musicnote">
 	<svg class="musicnote-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 95" preserveAspectRatio="none">
@@ -432,21 +511,21 @@ svg.pointer-shape-svg path {
 	<div class="slider-portrait-container">
 
 		<div class="slider-option-container">
-				<div class="slider-option slider-option-1 selected">
+				<div id="slider-option-1" class="slider-option selected">
 					<div class="slider-option-text"> Option 1! </div>
 					<svg class="slider-option-svg" viewBox="0 0 230 80">
 						<path d="M23.4609375 0 179.085938 37.1484375 166.861328 57.5390625 220.410156 79.84375 138.023438 75.1445313 142.5625 61.6699219 0.18359375 40z" fill="#000" stroke="#fff" stroke-width="3"></path>
 					</svg>
 				</div>
 
-				<div class="slider-option slider-option-2">
+				<div id="slider-option-2" class="slider-option">
 					<div class="slider-option-text"> Then maybe Option 2...? </div>
 					<svg class="slider-option-svg" viewBox="0 0 230 80">
 						<path d="M23.4609375 0 179.085938 37.1484375 166.861328 57.5390625 220.410156 79.84375 138.023438 75.1445313 142.5625 61.6699219 0.18359375 40z" fill="#000" stroke="#fff" stroke-width="3"></path>
 					</svg>
 				</div>
 
-				<div class="slider-option slider-option-3">
+				<div id="slider-option-3" class="slider-option">
 					<div class="slider-option-text"> Option 3. </div>
 					<svg class="slider-option-svg" viewBox="0 0 230 80">
 						<path d="M23.4609375 0 179.085938 37.1484375 166.861328 57.5390625 220.410156 79.84375 138.023438 75.1445313 142.5625 61.6699219 0.18359375 40z" fill="#000" stroke="#fff" stroke-width="3"></path>
