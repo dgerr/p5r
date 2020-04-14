@@ -2,47 +2,37 @@
 <head><title>dialog box testing</title></head>
 
 
+<script
+  src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+  crossorigin="anonymous"></script>
+
 <script>
 
 var CURRENT_PAGE = 0;
 var CURRENT_SELECTION = 1;  // NOT zero-indexed
 var SPEAKER_NAME = "Akechi";
 var DIALOG = [
-	"This sentence has one line.",
-	"This has two lines. The second line is much longer than the first line. ",
-	"This has three lines. Three lines is too long, but it can probably barely fit. Can I stop typing yet? Apparently not. Okay, here's one more line!"
-]
-
-/*Takes a string and returns raw html with some random "ransom note" letters, Persona style.
-
-~0.2 chance to be ransom letter.
-Consecutive letters will never be ransom.
-e.g. "asdf" ==> "as<span class='ransom'>d</span>f"
-*/
-function ransomify(input) {
-	var result = document.createElement('span');
-	var isRansom = new Array(input.length);
-
-	//lol
-	if (input.length == 0) {
-		return input;
-	}
-
-	for (var i = 1; i < input.length; i++) {
-		var elem = document.createElement('span');
-		elem.textContent = input[i];
-		if (Math.random() < 0.2 && isRansom[i-1] != 1) {
-			elem.setAttribute('class', 'ransom');
-			isRansom[i] = 1;
+	{ dialog: "This sentence has one line." },
+	{ dialog: "This has two lines. The second line is much longer than the first line. " },
+	{ dialog: "This has three lines. Three lines is too long, but it can probably barely fit. Can I stop typing yet? Apparently not. Okay, here's one more line!" },
+	{ 
+		hasBranchingOptions: true, 
+		branchingOptions: { 1: "Option 1", 2: "Option 2", 3: "Option 3" } 
+	},
+	{ hasBranchingResponses: true, 
+		branchingResponses: { 
+			1: { dialog: "Response to option 1... ", sprite: "cheerful"}, 
+			2: { dialog: "Response to option 2? ", sprite: "shocked"}, 
+			3: { dialog: "Response to option 3...!!! " }, 
 		}
-		result.appendChild(elem);
-
-	}
-
-}
+	},
+	{ dialog: "Back on the main track..." },
+]
 
 /* precondition: CURRENT_PAGE <= DIALOG.length*/
 function renderScene() {
+	// the speaker never changes
 	document.getElementById('header-shape-text').textContent = SPEAKER_NAME;
 
 	var pointer = document.getElementById('pointer');
@@ -51,27 +41,67 @@ function renderScene() {
 	}
 
 	var bodyText = document.getElementById('body-shape-text');
-	bodyText.textContent = DIALOG[CURRENT_PAGE];
-	document.getElementById('header-shape-text').textContent = SPEAKER_NAME;
-	document.getElementById('audio-advance').play();
+	var { dialog, hasBranchingOptions, branchingOptions, hasBranchingResponses, branchingResponses } = DIALOG[CURRENT_PAGE];
 
-	if (CURRENT_PAGE > 0 && CURRENT_PAGE < DIALOG.length) {
-		bodyText.classList.remove('fadeIn');
-		bodyText.classList.add('hide');
+	if (dialog) {
+		bodyText.textContent = dialog;
+		document.getElementById('audio-advance').play();
+
+		if (CURRENT_PAGE > 0 && CURRENT_PAGE < DIALOG.length) {
+			bodyText.classList.remove('fadeIn');
+			bodyText.classList.add('hide');
+			setTimeout(function() {
+				bodyText.classList.remove('hide');
+				bodyText.classList.add('fadeIn');
+			}, 100);
+		}		
+	}
+	else if (hasBranchingOptions && branchingOptions) {
+		console.assert(Object.keys(branchingOptions).length == 3, "should be exactly 3 branching options with keys [1,2,3]"); // precondition: 3 options
+		for (var key in branchingOptions) {
+			// suddenly jquery!! ugh
+			$("#slider-option-"+ key + " .slider-option-text").text(branchingOptions[key]);
+		}
+		$("#slider-wrapper").removeClass('hidden');
+	}
+	else if (hasBranchingResponses && branchingResponses) {
+
+		$("#slider-wrapper").addClass('hidden');
+		var portraitContainerWrapper = document.getElementById('portrait-container-wrapper');
+		portraitContainerWrapper.classList.add('fadeOut');
+		portraitContainerWrapper.classList.remove('fadeIn');
+
 		setTimeout(function() {
-			bodyText.classList.remove('hide');
-			bodyText.classList.add('fadeIn');
-		}, 100);
+			// remember CURRENT_SELECTION is an int
+			bodyText.textContent = branchingResponses[CURRENT_SELECTION].dialog;
+			// document.getElementById('audio-advance').play();
+
+			portraitContainerWrapper.classList.remove('fadeOut');
+			portraitContainerWrapper.classList.add('fadeIn');
+
+		}, 1500);
 	}
 }
 
 function isDialogPage() {
 	// temp
-	return false;
+	console.log('isDialogPage called!');
+
+	var { hasBranchingOptions } = DIALOG[CURRENT_PAGE];
+	return hasBranchingOptions;
 }
 
-function evaluateDialog() {
+function maybeAdvanceDialog() {
+	document.getElementById('audio-select').play();
+
+	// i am super lazy so the third option will be the good one
+	if (CURRENT_SELECTION == 3) {
+		setTimeout(function() { document.getElementById('audio-musicnote').play(); }, 1250);
+	}
 	// test
+
+	CURRENT_PAGE++;
+	renderScene();
 }
 
 function main() {
@@ -85,6 +115,7 @@ function main() {
 				document.getElementById('slider-option-'+CURRENT_SELECTION).classList.remove('selected');
 				CURRENT_SELECTION--;
 				document.getElementById('slider-option-'+CURRENT_SELECTION).classList.add('selected');
+				document.getElementById('audio-switch').currentTime = 0;
 				document.getElementById('audio-switch').play();
 			}
 		}
@@ -93,39 +124,43 @@ function main() {
 				document.getElementById('slider-option-'+CURRENT_SELECTION).classList.remove('selected');
 				CURRENT_SELECTION++;
 				document.getElementById('slider-option-'+CURRENT_SELECTION).classList.add('selected');
+				document.getElementById('audio-switch').currentTime = 0;
 				document.getElementById('audio-switch').play();
 			}
 		}
 		else if (e.keyCode == 13 || e.keyCode == 32) {  // 13 = enter, 32 = space 
-
+	
 			if (isDialogPage()) {
-				evaluateDialog();
+				console.log('is dialog page');
+				maybeAdvanceDialog();
+				return;
 			}
-			else {
-				CURRENT_PAGE++;
 
-				if (CURRENT_PAGE == 1) {
-					var audio = document.getElementById('audio-sweet');
-					audio.volume = 0.66;
-					audio.play();
-				}
+			CURRENT_PAGE++;
 
-				if (CURRENT_PAGE >= DIALOG.length) {
-					// console.log('Out of stuff');
-					return;
-
-				} else {
-					renderScene();
-				}				
-
+			if (CURRENT_PAGE == 1) {
+				var audio = document.getElementById('audio-sweet');
+				audio.volume = 0.66;
+				audio.play();
 			}
+
+			if (CURRENT_PAGE >= DIALOG.length) {
+				// console.log('Out of stuff');
+				return;
+
+			} else {
+				renderScene();
+			}				
+
 		}
 	});
 
 }
 
-// I still don't know why this is necessary
-setTimeout(function() { main() }, 0);
+$(document).ready(function(){
+	// I still don't know why this is necessary
+	setTimeout(function() { main() }, 0);
+});
 
 </script>
 
@@ -178,7 +213,7 @@ body {
 .thoughtbubble-text {
 	position: relative;
 	width: 250px; 
-	top: 100px; left: 50px;
+	top: 100px; left: 60px;
 	text-align: center;
 }
 
@@ -285,6 +320,7 @@ body {
 
 .hide {
 	opacity: 0;
+
 }
 
 .fadeIn {
@@ -292,20 +328,18 @@ body {
 	transition: 0.25s all;
 }
 
+.fadeOut {
+	opacity: 0;
+	transition: 0.2s all;
+}
+
+
 .slider {
 	position: absolute;
 	right: 0;
 	height: 100%;
 	width: 400px;
 	z-index: 100;
-}
-
-/* Music note
-TODO: probably remove*/
-.musicnote {
-	display: none;
-	position: relative;
-	height: 100px; width: 75px;
 }
 
 /* Header text */
@@ -476,7 +510,7 @@ svg.pointer-shape-svg path {
 }
 
 .thoughtbubble svg.thoughtbubble-svg path {
-	animation: thoughtbubblehover 3s 0s ease infinite;
+	animation: thoughtbubblehover 1s 0s ease infinite;
 }
 
 </style>
@@ -486,10 +520,7 @@ svg.pointer-shape-svg path {
 <audio id="audio-switch" src="00042.wav"></audio>
 <audio id="audio-select" src="00104.wav"></audio>
 <audio id="audio-advance" src="00086.wav"></audio>
-
-<div class="overlay"></div>
-<div class="background"></div>
-<div class="portrait"></div>
+<audio id="audio-musicnote" src="00108_streaming.wav"></audio>
 
 <div class="thoughtbubble">
 	<div class="thoughtbubble-text">I spent some time alone with Akechi...</div>
@@ -498,100 +529,101 @@ svg.pointer-shape-svg path {
 	</svg>
 </div>
 
-<!-- <div class="musicnote">
-	<svg class="musicnote-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 95" preserveAspectRatio="none">
-			<path fill="#000" d="M6.57885742,56.0972333 C10.0181478,53.7526081 13.4335938,52.5802955 16.8251953,52.5802955 C20.2167969,52.5802955 23.097168,53.2646874 25.4663086,54.6334712 L18.1035156,0.11328125 L41.3935547,23.7958984 L41.3935547,35.7607422 C41.0608749,36.4734027 44.2405624,40.8601215 50.9326172,48.9208984 L44.3886719,59.1913979 L46.9423828,63.8662109 L41.3935547,59.1913979 L42.7646484,54.6334712 L26.8435059,29.5400391 C28.0016434,48.0494672 28.5863602,37.3108374 30.5976563,57.3241498 C31.9880711,61.3197273 33.2529297,65.7453352 33.2529297,69.6311176 C33.2529297,74.0707501 31.1164551,78.3564287 26.8435059,82.4881534 C23.2901204,84.8300355 19.8844401,86.0009766 16.6264648,86.0009766 C13.3684896,86.0009766 9.87158203,84.8300355 6.13574219,82.4881534 C2.0452474,78.750514 0,74.4648354 0,69.6311176 C0,64.7973997 2.19295247,60.2861049 6.57885742,56.0972333 Z" stroke="#33d9e1" stroke-width="2.5"></path>
-		</svg>
-</div> -->
+<div class="background"></div>
 
-<div class="slider">
+<div id="slider-wrapper" class="hidden">
+
+	<div class="overlay"></div>
+
+	<div class="slider">
 
 
+		<div class="slider-portrait-container">
 
-	<div class="slider-portrait-container">
+			<div class="slider-option-container">
+					<div id="slider-option-1" class="slider-option selected">
+						<div class="slider-option-text"> a</div>
+						<svg class="slider-option-svg" viewBox="0 0 230 80">
+							<path d="M23.4609375 0 179.085938 37.1484375 166.861328 57.5390625 220.410156 79.84375 138.023438 75.1445313 142.5625 61.6699219 0.18359375 40z" fill="#000" stroke="#fff" stroke-width="3"></path>
+						</svg>
+					</div>
 
-		<div class="slider-option-container">
-				<div id="slider-option-1" class="slider-option selected">
-					<div class="slider-option-text"> Option 1! </div>
-					<svg class="slider-option-svg" viewBox="0 0 230 80">
-						<path d="M23.4609375 0 179.085938 37.1484375 166.861328 57.5390625 220.410156 79.84375 138.023438 75.1445313 142.5625 61.6699219 0.18359375 40z" fill="#000" stroke="#fff" stroke-width="3"></path>
-					</svg>
-				</div>
+					<div id="slider-option-2" class="slider-option">
+						<div class="slider-option-text"> b </div>
+						<svg class="slider-option-svg" viewBox="0 0 230 80">
+							<path d="M23.4609375 0 179.085938 37.1484375 166.861328 57.5390625 220.410156 79.84375 138.023438 75.1445313 142.5625 61.6699219 0.18359375 40z" fill="#000" stroke="#fff" stroke-width="3"></path>
+						</svg>
+					</div>
 
-				<div id="slider-option-2" class="slider-option">
-					<div class="slider-option-text"> Then maybe Option 2...? </div>
-					<svg class="slider-option-svg" viewBox="0 0 230 80">
-						<path d="M23.4609375 0 179.085938 37.1484375 166.861328 57.5390625 220.410156 79.84375 138.023438 75.1445313 142.5625 61.6699219 0.18359375 40z" fill="#000" stroke="#fff" stroke-width="3"></path>
-					</svg>
-				</div>
+					<div id="slider-option-3" class="slider-option">
+						<div class="slider-option-text"> c </div>
+						<svg class="slider-option-svg" viewBox="0 0 230 80">
+							<path d="M23.4609375 0 179.085938 37.1484375 166.861328 57.5390625 220.410156 79.84375 138.023438 75.1445313 142.5625 61.6699219 0.18359375 40z" fill="#000" stroke="#fff" stroke-width="3"></path>
+						</svg>
+					</div>
 
-				<div id="slider-option-3" class="slider-option">
-					<div class="slider-option-text"> Option 3. </div>
-					<svg class="slider-option-svg" viewBox="0 0 230 80">
-						<path d="M23.4609375 0 179.085938 37.1484375 166.861328 57.5390625 220.410156 79.84375 138.023438 75.1445313 142.5625 61.6699219 0.18359375 40z" fill="#000" stroke="#fff" stroke-width="3"></path>
-					</svg>
-				</div>
 
+			</div>
+
+			 <svg class="slider-left-bar-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 720" preserveAspectRatio="none">
+				<path fill="#fff" d="M215.887956,9.7073811e-15 L316,0 L186.76648,354.276273 L192.531511,365.230732 L48.2971738,713 L0,713 L74.4935938,579.643787 L172.657556,335.678758 L222.779589,108.09338 C223.348284,106.441541 218.847745,104.778265 209.277974,103.103553 L215.887956,42.346102 L215.887956,9.7073811e-15 Z" stroke="#000" stroke-width="8"></path>
+			</svg>
+			 <svg class="slider-right-bar-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" preserveAspectRatio="none">
+				<path fill="#fff" d="M0 194 185 0 185 75.5560453 51.3955454 173.671728 41.7751362 194z" stroke="#000" stroke-width="8"></path>
+			</svg>
+
+			 <svg class="slider-top-cover-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 160" preserveAspectRatio="none">
+				<path fill="#000" d="M0 95.171875 43.046875 0 180.400391 80.6582031 134.21875 161.316406
+	z"></path>
+			</svg>
+			 <svg class="slider-bottom-cover-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 160" preserveAspectRatio="none">
+				<path fill="#000" d="M0 95.171875 43.046875 0 180.400391 80.6582031 134.21875 161.316406
+	z"></path>
+			</svg>
+
+
+			<div class="slider-portrait"></div>
+			<svg width="0" height="0">
+			<clipPath id="slider-clip">
+			<path d="M252.227334 0 450.285 0 450.285 496.948844 293.108002 675.793709 0 675.793709z"></path>
+			</clipPath>
+			</svg>
+
+		</div>
+	</div>
+</div>
+
+<div id="portrait-container-wrapper">
+	<div class="portrait"></div>
+	<div class="container">
+
+		<div id="header-shape">
+			<div id="header-shape-text"></div>
+
+			 <svg class="header-shape-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 70" preserveAspectRatio="none">
+				<path fill="#fff" d="M26.2246094,27.5214844 L117.930664,0.734375 L137.818359,25.7333984 L57.9199219,42.5527344 L59.8798828,50.9101562 C21.030449,54.8657798 1.29184226,56.8006756 0.6640625,56.7148438 L37.9296875,38.0146484 L26.2246094,27.5214844 Z" stroke="#000" stroke-width="3"></path>
+			</svg>
 
 		</div>
 
-		 <svg class="slider-left-bar-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 720" preserveAspectRatio="none">
-			<path fill="#fff" d="M215.887956,9.7073811e-15 L316,0 L186.76648,354.276273 L192.531511,365.230732 L48.2971738,713 L0,713 L74.4935938,579.643787 L172.657556,335.678758 L222.779589,108.09338 C223.348284,106.441541 218.847745,104.778265 209.277974,103.103553 L215.887956,42.346102 L215.887956,9.7073811e-15 Z" stroke="#000" stroke-width="8"></path>
-		</svg>
-		 <svg class="slider-right-bar-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" preserveAspectRatio="none">
-			<path fill="#fff" d="M0 194 185 0 185 75.5560453 51.3955454 173.671728 41.7751362 194z" stroke="#000" stroke-width="8"></path>
-		</svg>
+		<div id="body-shape">
+			<div id="body-shape-text">
+			</div>
 
-		 <svg class="slider-top-cover-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 160" preserveAspectRatio="none">
-			<path fill="#000" d="M0 95.171875 43.046875 0 180.400391 80.6582031 134.21875 161.316406
-z"></path>
-		</svg>
-		 <svg class="slider-bottom-cover-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 160" preserveAspectRatio="none">
-			<path fill="#000" d="M0 95.171875 43.046875 0 180.400391 80.6582031 134.21875 161.316406
-z"></path>
-		</svg>
-
-
-		<div class="slider-portrait"></div>
-		<svg width="0" height="0">
-		<clipPath id="slider-clip">
-		<path d="M252.227334 0 450.285 0 450.285 496.948844 293.108002 675.793709 0 675.793709z"></path>
-		</clipPath>
-		</svg>
-
-	</div>
-
-</div>
-
-<div class="container">
-
-	<div id="header-shape">
-		<div id="header-shape-text"></div>
-
-		 <svg class="header-shape-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 70" preserveAspectRatio="none">
-			<path fill="#fff" d="M26.2246094,27.5214844 L117.930664,0.734375 L137.818359,25.7333984 L57.9199219,42.5527344 L59.8798828,50.9101562 C21.030449,54.8657798 1.29184226,56.8006756 0.6640625,56.7148438 L37.9296875,38.0146484 L26.2246094,27.5214844 Z" stroke="#000" stroke-width="3"></path>
-		</svg>
-
-	</div>
-
-	<div id="body-shape">
-		<div id="body-shape-text">
+			 <svg class="body-shape-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 150" preserveAspectRatio="none">
+				<path fill="#000" d="M0 31.28125 371.046875 0.76171875 390.566406 130.332031 0 88.6796875z" stroke="#fff" stroke-width="5"></path>
+			</svg>
 		</div>
 
-		 <svg class="body-shape-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 150" preserveAspectRatio="none">
-			<path fill="#000" d="M0 31.28125 371.046875 0.76171875 390.566406 130.332031 0 88.6796875z" stroke="#fff" stroke-width="5"></path>
-		</svg>
-	</div>
 
+		<div id="pointer">
+			 <svg class="pointer-shape-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 75" preserveAspectRatio="none">
+				<path fill="#fff" d="M74.3613281 0.40234375 108.277344 43.6289063 0.21875 68.9921875z" stroke="#000" stroke-width="5"></path>
+			</svg>
 
-	<div id="pointer">
-		 <svg class="pointer-shape-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 75" preserveAspectRatio="none">
-			<path fill="#fff" d="M74.3613281 0.40234375 108.277344 43.6289063 0.21875 68.9921875z" stroke="#000" stroke-width="5"></path>
-		</svg>
+		</div>
 
 	</div>
-
 </div>
-
 </body>
 </html>
